@@ -10,7 +10,7 @@ const db = new Database('./tors-server.db', { verbose: console.log });
 
 app.use((req, res, next) => {
     const clientApiKey = req.header('api-key');
-    const serverApiKey = "DEMO_KEY";
+    const serverApiKey = process.env.API_KEY;
 
     if (!serverApiKey) {
         console.error("Server API key is not set. Please configure the API_KEY in the environment.");
@@ -66,6 +66,17 @@ app.get('/tasks', (req, res) => {
 app.get('/categories', (req, res) => {
     const categories = db.prepare('SELECT * FROM categories').all();
     res.status(200).send(categories);
+});
+
+app.get('/categories/:id', (req, res) => {
+    const id = parseInt(req.params.id, 10);
+
+    const category = db.prepare('SELECT name FROM categories WHERE id = ?').get(id);
+    if (!category) {
+        return res.status(404).send({ message: "Category not found." });
+    }
+
+    res.status(200).send({ name: category.name });
 });
 
 app.post('/tasks', (req, res) => {
